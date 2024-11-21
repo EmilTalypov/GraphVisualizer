@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xunit;
 using GraphVisualizer;
+using Xunit;
 
 #pragma warning disable CS8629
-namespace UnitTests {
-    public class DijkstraTests {
+namespace UnitTests
+{
+    public class DijkstraTests
+    {
         [Fact]
-        public void Test1() {
+        public void Test1()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 2, 3);
@@ -25,7 +28,8 @@ namespace UnitTests {
         }
 
         [Fact]
-        public void Test2() {
+        public void Test2()
+        {
             Graph<string, int> graph = new();
 
             graph.AddEdge("a", "b", 3);
@@ -40,22 +44,27 @@ namespace UnitTests {
         }
 
         [Fact]
-        public void Test3() {
+        public void Test3()
+        {
             Graph<string, int> graph = new();
 
             graph.AddEdge("A", "B", 3);
             graph.AddEdge("B", "C", 4);
             graph.AddEdge("B", "C", 2);
 
-            try {
+            try
+            {
                 var distance = GraphAlgos.Dijkstra(graph, "abc");
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Assert.Equal("Can't find start vertex abc", ex.Message);
             }
         }
 
         [Fact]
-        public void Test4() {
+        public void Test4()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 3, 5);
@@ -86,7 +95,8 @@ namespace UnitTests {
         }
 
         [Fact]
-        public void Test5() {
+        public void Test5()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 2);
@@ -107,7 +117,8 @@ namespace UnitTests {
         }
 
         [Fact]
-        public void Test6() {
+        public void Test6()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 2);
@@ -118,17 +129,22 @@ namespace UnitTests {
             graph.AddEdge(3, 4);
             graph.AddEdge(3, 5);
 
-            try {
+            try
+            {
                 var distance = GraphAlgos.Dijkstra(graph, 2);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Assert.Equal("Dijkstra don't work with negative edges", ex.Message);
             }
         }
     }
 
-    public class BFSTests {
+    public class BFSTests
+    {
         [Fact]
-        public void Test1() {
+        public void Test1()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 4);
@@ -147,7 +163,8 @@ namespace UnitTests {
         }
 
         [Fact]
-        public void Test2() {
+        public void Test2()
+        {
             Graph<string, int> graph = new();
 
             graph.AddEdge("a", "b");
@@ -169,9 +186,11 @@ namespace UnitTests {
         }
     }
 
-    public class GetComponentsTests {
+    public class GetComponentsTests
+    {
         [Fact]
-        public void Test1() {
+        public void Test1()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 5);
@@ -202,9 +221,11 @@ namespace UnitTests {
         }
     }
 
-    public class GetTinToutTests {
+    public class GetTinToutTests
+    {
         [Fact]
-        public void Test1() {
+        public void Test1()
+        {
             Graph<int, int> graph = new();
 
             graph.AddEdge(1, 2);
