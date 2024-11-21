@@ -1,2 +1,5 @@
 GraphVisualizer/bin
 GraphVisualizer/obj
+UnitTests/bin
+UnitTests/obj
+.vs
