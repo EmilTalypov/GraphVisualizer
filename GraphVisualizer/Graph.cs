@@ -1,65 +1,134 @@
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace GraphVisualizer
 {
-    public class Graph<K, T>
+    public class Graph<T>
         where T : INumber<T>
-        where K : notnull
     {
-        private readonly Dictionary<K, int> _vertexIndex = [];
+        private readonly Dictionary<string, int> _vertexIndex = [];
         private readonly List<List<(int, T)>> _graph = [];
+        private readonly List<string> _vertexName = [];
 
-        public List<List<(int, T)>> GetGraph()
-        {
-            return _graph;
-        }
+        private int _vertexCounter = 0;
 
-        public List<List<(int, T)>> GraphAsList => _graph;
+        public List<List<(int, T)>> GetGraph() => _graph;
 
-        public int? GetVertexIndex(K vertex)
+        public List<(string, List<(int, T)>)> GetGraphWithNames() =>
+            _graph.Select((edges, v) => (_vertexName[v], edges)).ToList();
+
+        public int? GetVertexIndex(string vertex)
         {
             return _vertexIndex.TryGetValue(vertex, out var index) ? index : null;
         }
 
-        public void AddVertex(K vertex)
+        public bool IsTree(string root)
         {
-            if (!_vertexIndex.ContainsKey(vertex))
-            {
-                _vertexIndex.Add(vertex, _vertexIndex.Count);
-                _graph.Add([]);
-            }
+            var componentColor = GraphAlgos.GetComponents(this);
+            var visitedAt = GraphAlgos.BFS(this, root);
+
+            bool isConnected = componentColor.All(color => color == 1);
+            bool visitedAll = visitedAt.All(visitedAt => visitedAt != -1);
+
+            return isConnected && visitedAll;
         }
 
-        public void AddDirectEdge(K vertex, K otherVertex, T weight)
+        public void AddVertex(string vertex)
         {
-            if (!_vertexIndex.ContainsKey(vertex))
+            if (_vertexIndex.ContainsKey(vertex))
             {
-                AddVertex(vertex);
+                return;
             }
 
-            if (!_vertexIndex.ContainsKey(otherVertex))
-            {
-                AddVertex(otherVertex);
-            }
+            _vertexIndex.Add(vertex, _vertexCounter);
+            _graph.Add([]);
+            _vertexName.Add(vertex);
 
-            _vertexIndex.TryGetValue(vertex, out int vertexIndex);
-            _vertexIndex.TryGetValue(otherVertex, out int otherVertexIndex);
-
-            _graph[vertexIndex].Add((otherVertexIndex, weight));
+            _vertexCounter += 1;
         }
 
-        public void AddDirectEdge(K vertex, K otherVertex)
+        public void AddDirectEdge(string vertex, string otherVertex, T weight)
+        {
+            int? vertexIndex = GetVertexIndex(vertex);
+            int? otherVertexIndex = GetVertexIndex(otherVertex);
+
+            if (!vertexIndex.HasValue || !otherVertexIndex.HasValue)
+            {
+                throw new Exception(
+                    $"Tried to add edge between non existing vertexs {vertex}, {otherVertex}"
+                );
+            }
+
+            _graph[vertexIndex.Value].Add((otherVertexIndex.Value, weight));
+        }
+
+        public void DeleteVertex(string vertex)
+        {
+            int? vertexIndex = GetVertexIndex(vertex);
+
+            if (!vertexIndex.HasValue)
+            {
+                throw new Exception($"Tried to delete non existing vertex {vertex}");
+            }
+
+            foreach (var (u, weight) in _graph[vertexIndex.Value])
+            {
+                List<(int, T)> backEdges = _graph[u]
+                    .Where(edge => edge.Item1 == vertexIndex.Value)
+                    .ToList();
+
+                foreach (var (v, backWeight) in backEdges)
+                {
+                    DeleteDirectEdge(_vertexName[u], vertex, backWeight);
+                }
+            }
+
+            _graph[vertexIndex.Value].Clear();
+        }
+
+        public void DeleteDirectEdge(string vertex, string otherVertex, T weight)
+        {
+            int? vertexIndex = GetVertexIndex(vertex);
+            int? otherVertexIndex = GetVertexIndex(otherVertex);
+
+            if (!vertexIndex.HasValue || !otherVertexIndex.HasValue)
+            {
+                throw new Exception(
+                    $"Tried to delete edge between non existing vertexs {vertex} {otherVertex}"
+                );
+            }
+
+            _graph[vertexIndex.Value].Remove((otherVertexIndex.Value, weight));
+        }
+
+        public void DeleteEdges(string vertex, string otherVertex)
+        {
+            int? vertexIndex = GetVertexIndex(vertex);
+            int? otherVertexIndex = GetVertexIndex(otherVertex);
+
+            if (!vertexIndex.HasValue || !otherVertexIndex.HasValue)
+            {
+                throw new Exception(
+                    $"Tried to delete edges between non existing vertexs {vertex} {otherVertex}"
+                );
+            }
+
+            _graph[vertexIndex.Value].RemoveAll(edge => edge.Item1 == otherVertexIndex.Value);
+            _graph[otherVertexIndex.Value].RemoveAll(edge => edge.Item1 == vertexIndex.Value);
+        }
+
+        public void AddDirectEdge(string vertex, string otherVertex)
         {
             AddDirectEdge(vertex, otherVertex, T.One);
         }
 
-        public void AddEdge(K vertex, K otherVertex)
+        public void AddEdge(string vertex, string otherVertex)
         {
-            AddDirectEdge(vertex, otherVertex);
-            AddDirectEdge(otherVertex, vertex);
+            AddDirectEdge(vertex, otherVertex, T.One);
+            AddDirectEdge(otherVertex, vertex, T.One);
         }
 
-        public void AddEdge(K vertex, K otherVertex, T weight)
+        public void AddEdge(string vertex, string otherVertex, T weight)
         {
             AddDirectEdge(vertex, otherVertex, weight);
             AddDirectEdge(otherVertex, vertex, weight);

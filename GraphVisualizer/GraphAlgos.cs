@@ -10,13 +10,12 @@ namespace GraphVisualizer
 
     public static class GraphAlgos
     {
-        public static List<T> Dijkstra<K, T>(
-            Graph<K, T> sourceGraph,
-            K start,
+        public static List<T> Dijkstra<T>(
+            Graph<T> sourceGraph,
+            string start,
             DijkstraType type = DijkstraType.MIN
         )
             where T : INumber<T>
-            where K : notnull
         {
             var graph = sourceGraph.GetGraph();
             int? startIndex = sourceGraph.GetVertexIndex(start);
@@ -135,9 +134,8 @@ namespace GraphVisualizer
             }
         }
 
-        public static List<int> BFS<K, T>(Graph<K, T> sourceGraph, K start)
+        public static List<int> BFS<T>(Graph<T> sourceGraph, string start)
             where T : INumber<T>
-            where K : notnull
         {
             var graph = sourceGraph.GetGraph();
             int? startIndex = sourceGraph.GetVertexIndex(start);
@@ -171,9 +169,8 @@ namespace GraphVisualizer
             return visitedAt;
         }
 
-        public static List<int> GetComponents<K, T>(Graph<K, T> sourceGraph)
+        public static List<int> GetComponents<T>(Graph<T> sourceGraph)
             where T : INumber<T>
-            where K : notnull
         {
             var graph = sourceGraph.GetGraph();
 
@@ -217,9 +214,8 @@ namespace GraphVisualizer
             tout[vertex] = timer++;
         }
 
-        public static (List<int>, List<int>) GetTinTout<K, T>(Graph<K, T> sourceTree, K root)
+        public static (List<int>, List<int>) GetTinTout<T>(Graph<T> sourceTree, string root)
             where T : INumber<T>
-            where K : notnull
         {
             var tree = sourceTree.GetGraph();
             int? rootIndex = sourceTree.GetVertexIndex(root);
