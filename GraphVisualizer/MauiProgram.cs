@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using GraphVisualizer.GraphView;
+using Microsoft.Extensions.Logging;
 
 namespace GraphVisualizer;
 
@@ -7,6 +8,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
+
         builder
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
@@ -18,6 +20,9 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
+
+        builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddSingleton<GraphViewModel>();
 
         return builder.Build();
     }
