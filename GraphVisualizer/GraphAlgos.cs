@@ -17,27 +17,25 @@ namespace GraphVisualizer
         )
             where T : INumber<T>
         {
-            var graph = sourceGraph.GetGraph();
+            List<List<(int, T)>> graph = sourceGraph.GraphAsList;
             int? startIndex = sourceGraph.GetVertexIndex(start);
 
             if (!startIndex.HasValue)
             {
-                throw new Exception($"Can't find start vertex {start}");
+                throw new ArgumentException($"Can't find start vertex {start}");
             }
 
             T defaultDistance = T.Zero;
 
             if (type == DijkstraType.MIN)
             {
-                var (sum, existNegativeEdge) = GetEdgesSum(graph);
-
-                if (existNegativeEdge)
+                if (graph.Any(edges => edges.Any(edge => edge.Item2 < T.Zero)))
                 {
-                    throw new Exception("Dijkstra don't work with negative edges");
+                    throw new InvalidOperationException("Dijkstra don't work with negative edges");
                 }
                 else
                 {
-                    defaultDistance = sum;
+                    defaultDistance = sourceGraph.EdgesSum;
                 }
             }
 
@@ -68,42 +66,6 @@ namespace GraphVisualizer
             }
 
             return distance;
-        }
-
-        private static (T, bool) GetEdgesSum<T>(List<List<(int, T)>> graph)
-            where T : INumber<T>
-        {
-            Queue<int> queue = new();
-            List<bool> visited = Enumerable.Repeat(false, graph.Count).ToList();
-
-            T sum = T.Zero;
-            bool existNegativeEdge = false;
-
-            visited[0] = true;
-            queue.Enqueue(0);
-
-            while (queue.Count > 0)
-            {
-                int v = queue.Dequeue();
-
-                foreach (var (u, weight) in graph[v])
-                {
-                    if (!visited[u])
-                    {
-                        if (weight < T.Zero)
-                        {
-                            existNegativeEdge = true;
-                        }
-
-                        sum += weight;
-
-                        visited[u] = true;
-                        queue.Enqueue(u);
-                    }
-                }
-            }
-
-            return (sum, existNegativeEdge);
         }
 
         private static void ColorComponent<T>(
@@ -137,12 +99,12 @@ namespace GraphVisualizer
         public static List<int> BFS<T>(Graph<T> sourceGraph, string start)
             where T : INumber<T>
         {
-            var graph = sourceGraph.GetGraph();
+            var graph = sourceGraph.GraphAsList;
             int? startIndex = sourceGraph.GetVertexIndex(start);
 
             if (!startIndex.HasValue)
             {
-                throw new Exception($"Can't find start vertex {start}");
+                throw new ArgumentException($"Can't find start vertex {start}");
             }
 
             Queue<int> queue = new();
@@ -172,7 +134,7 @@ namespace GraphVisualizer
         public static List<int> GetComponents<T>(Graph<T> sourceGraph)
             where T : INumber<T>
         {
-            var graph = sourceGraph.GetGraph();
+            var graph = sourceGraph.GraphAsList;
 
             List<int> colorOfComponent = Enumerable.Repeat(0, graph.Count).ToList();
 
@@ -217,12 +179,12 @@ namespace GraphVisualizer
         public static (List<int>, List<int>) GetTinTout<T>(Graph<T> sourceTree, string root)
             where T : INumber<T>
         {
-            var tree = sourceTree.GetGraph();
+            var tree = sourceTree.GraphAsList;
             int? rootIndex = sourceTree.GetVertexIndex(root);
 
             if (!rootIndex.HasValue)
             {
-                throw new Exception($"Can't find {root} in vertexes");
+                throw new ArgumentException($"Can't find {root} in vertices");
             }
 
             List<int> tin = Enumerable.Repeat(-1, tree.Count).ToList();

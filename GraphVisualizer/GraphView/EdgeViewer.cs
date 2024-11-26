@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -7,12 +10,36 @@ using System.Threading.Tasks;
 
 namespace GraphVisualizer.GraphView
 {
-    internal class EdgeViewer<T>(PointF center1, PointF center2)
+    public class EdgeViewer<T>
         where T : INumber<T>
     {
-        private readonly PointF _center1 = center1;
-        private readonly PointF _center2 = center2;
-        private readonly SortedSet<T> _weights = [];
+        private readonly PointF _center1;
+        private readonly PointF _center2;
+        private readonly SortedSet<T> _weights;
+
+        public EdgeViewer(PointF center1, PointF center2)
+        {
+            _center1 = center1;
+            _center2 = center2;
+            _weights = [];
+        }
+
+        public EdgeViewer(PointF center1, PointF center2, SortedSet<T> weights)
+        {
+            _center1 = center1;
+            _center2 = center2;
+            _weights = weights;
+        }
+
+        public EdgeViewer<K> Copy<K>()
+            where K : INumber<K>
+        {
+            return new(
+                _center1,
+                _center2,
+                new SortedSet<K>(_weights.Select(weight => K.CreateChecked(weight)))
+            );
+        }
 
         public void AddMultipleEdge(T weight)
         {
@@ -48,9 +75,6 @@ namespace GraphVisualizer.GraphView
 
         public void Draw(ICanvas canvas, RectF _, bool existsBackEdge)
         {
-            PointF _center1 = this._center1;
-            PointF _center2 = this._center2;
-
             float angle = MathExtension.AngleBetween(_center1, _center2);
 
             // drawing edge weights
@@ -85,21 +109,24 @@ namespace GraphVisualizer.GraphView
             float dy =
                 (GraphViewConsts.VertexRadius + GraphViewConsts.TriangleSize) * MathF.Sin(angle);
 
+            PointF center1 = _center1;
+            PointF center2 = _center2;
+
             if (existsBackEdge)
             {
-                _center1.X += dx;
-                _center1.Y += dy;
+                center1.X += dx;
+                center1.Y += dy;
             }
 
-            _center2.X -= dx;
-            _center2.Y -= dy;
+            center2.X -= dx;
+            center2.Y -= dy;
 
-            canvas.DrawLine(_center1, _center2);
+            canvas.DrawLine(center1, center2);
 
-            _center2.X += GraphViewConsts.TriangleSize * MathF.Cos(angle);
-            _center2.Y += GraphViewConsts.TriangleSize * MathF.Sin(angle);
+            center2.X += GraphViewConsts.TriangleSize * MathF.Cos(angle);
+            center2.Y += GraphViewConsts.TriangleSize * MathF.Sin(angle);
 
-            canvas.FillPath(EdgeViewer<T>.GetTrianglePath(_center2, angle));
+            canvas.FillPath(GetTrianglePath(center2, angle));
         }
     }
 }

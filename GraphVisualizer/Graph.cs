@@ -6,16 +6,73 @@ namespace GraphVisualizer
     public class Graph<T>
         where T : INumber<T>
     {
-        private readonly Dictionary<string, int> _vertexIndex = [];
-        private readonly List<List<(int, T)>> _graph = [];
-        private readonly List<string> _vertexName = [];
+        private readonly Dictionary<string, int> _vertexIndex;
+        private readonly List<List<(int, T)>> _graph;
+        private readonly List<string> _vertexName;
 
-        private int _vertexCounter = 0;
+        private int _vertexCounter;
+        private T _edgesSum;
 
-        public List<List<(int, T)>> GetGraph() => _graph;
+        public List<List<(int, T)>> GraphAsList
+        {
+            get { return _graph; }
+        }
 
-        public List<(string, List<(int, T)>)> GetGraphWithNames() =>
-            _graph.Select((edges, v) => (_vertexName[v], edges)).ToList();
+        public T EdgesSum
+        {
+            get { return _edgesSum; }
+        }
+
+        public static event Action EdgesSumOverflow;
+
+        public Graph()
+        {
+            _vertexIndex = [];
+            _graph = [];
+            _vertexName = [];
+            _vertexCounter = 0;
+            _edgesSum = T.Zero;
+        }
+
+        public Graph(
+            Dictionary<string, int> vertexIndex,
+            List<List<(int, T)>> graph,
+            List<string> vertexName,
+            int vertexCounter,
+            T edgesSum
+        )
+        {
+            _vertexIndex = vertexIndex;
+            _graph = graph;
+            _vertexName = vertexName;
+            _vertexCounter = vertexCounter;
+            _edgesSum = edgesSum;
+        }
+
+        public Graph<K> Copy<K>()
+            where K : INumber<K>
+        {
+            return new(
+                _vertexIndex,
+                _graph
+                    .Select(edges =>
+                        edges.Select(edge => (edge.Item1, K.CreateChecked(edge.Item2))).ToList()
+                    )
+                    .ToList(),
+                _vertexName,
+                _vertexCounter,
+                K.CreateChecked(_edgesSum)
+            );
+        }
+
+        public void Clear()
+        {
+            _vertexIndex.Clear();
+            _graph.Clear();
+            _vertexName.Clear();
+            _vertexCounter = 0;
+            _edgesSum = T.Zero;
+        }
 
         public int? GetVertexIndex(string vertex)
         {
@@ -24,8 +81,8 @@ namespace GraphVisualizer
 
         public bool IsTree(string root)
         {
-            var componentColor = GraphAlgos.GetComponents(this);
-            var visitedAt = GraphAlgos.BFS(this, root);
+            List<int> componentColor = GraphAlgos.GetComponents(this);
+            List<int> visitedAt = GraphAlgos.BFS(this, root);
 
             bool isConnected = componentColor.All(color => color == 1);
             bool visitedAll = visitedAt.All(visitedAt => visitedAt != -1);
@@ -60,6 +117,18 @@ namespace GraphVisualizer
             }
 
             _graph[vertexIndex.Value].Add((otherVertexIndex.Value, weight));
+
+            try
+            {
+                checked
+                {
+                    _edgesSum += weight;
+                }
+            }
+            catch (OverflowException ex)
+            {
+                EdgesSumOverflow.Invoke();
+            }
         }
 
         public void DeleteVertex(string vertex)

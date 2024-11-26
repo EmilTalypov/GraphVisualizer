@@ -1,4 +1,4 @@
-﻿using GraphVisualizer.ViewModels;
+﻿using GraphVisualizer.GraphView;
 using Microsoft.Extensions.Logging;
 
 namespace GraphVisualizer;
